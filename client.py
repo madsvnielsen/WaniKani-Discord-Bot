@@ -426,6 +426,9 @@ class WaniKaniBotClient(discord.Client):
         # Provides help with this Bot's commands.
         elif command in ['help', 'h', 'commands']:
             await self.get_help(words=words, channel=message.channel, prefix=prefix)
+        elif command in ['addmelb']:
+            self._dataStorage.add_user_to_leaderboard(user_id=message.author.id)
+            await message.channel.send(content=f"<@{message.author.id}> has been added to the leaderboard")
         # Unknown Command.
         else:
             await message.channel.send(
@@ -605,8 +608,8 @@ class WaniKaniBotClient(discord.Client):
         I am not sure how to get username and level directly from fetch_wanikani_user_data() so I created a separate
         function in datafetcher.py. 
         """
-
-        users = self._dataStorage.get_api_users()
+        all_users = self._dataStorage.get_database()
+        users = all_users.find({"leaderboard": True})
         retrieve_user_info: Dict[str, Any]
         list = []
         for user in users:
@@ -618,27 +621,38 @@ class WaniKaniBotClient(discord.Client):
         # list = [('user1', 6), ('user2', 3), ('user3', 7), ('user4', 7)]
         # print(list)
 
-        sorted_list = (sorted(list, key=lambda x: x[1], reverse=True))
-        str_users = ""
-        str_levels = ""
+        if (list.__len__() == 0):
+            print("List is empty")
+            embed: discord.Embed = discord.Embed(title='Leaderboard (No registered users yet)',
+                                                 colour=author.colour,
+                                                 timestamp=datetime.now())
 
-        # get all of the usernames in descending order of level status
-        for itr in sorted_list:
-            str_users = str_users + (str(itr[0]) + "\n")
+            await self.send_embed(channel=channel, embed=embed)
+        else:
 
-        # get the levels of all users
-        for itr in sorted_list:
-            str_levels = str_levels + (str(itr[1]) + "\n")
+            # list = [('user1', 6), ('user2', 3), ('user3', 7), ('user4', 7)]
+            # print(list)
 
-        embed.add_field(name='Username',
-                        value='%s' % str_users,
-                        inline=True)
-        embed.add_field(name='level',
-                        value='%s' % str_levels,
-                        inline=True)
+            sorted_list = (sorted(list, key=lambda x: x[1], reverse=True))
+            str_users = ""
+            str_levels = ""
 
-        await self.send_embed(channel=channel, embed=embed)
+            # get all of the usernames in descending order of level status
+            for itr in sorted_list:
+                str_users = str_users + (str(itr[0]) + "\n")
 
+            # get the levels of all users
+            for itr in sorted_list:
+                str_levels = str_levels + (str(itr[1]) + "\n")
+
+            embed.add_field(name='Username',
+                            value='%s' % str_users,
+                            inline=True)
+            embed.add_field(name='level',
+                            value='%s' % str_levels,
+                            inline=True)
+
+            await self.send_embed(channel=channel, embed=embed)
     async def get_leveling_stats(self, words: List[str], channel: discord.TextChannel,
                                  author: discord.member.Member, prefix: str):
         """
@@ -754,6 +768,9 @@ class WaniKaniBotClient(discord.Client):
                             inline=False)
             embed.add_field(name=f'{prefix}lb',
                             value="Displays the leaderboard.",
+                            inline=False)
+            embed.add_field(name=f'{prefix}addmelb',
+                            value="Adds user to the leaderboard.",
                             inline=False)
             embed.add_field(name=f'{prefix}congratulations',
                             value=':tada:',

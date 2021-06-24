@@ -1,5 +1,0 @@
-{
-  "CRABIGATOR_VERSION": "0.3.4",
-  "DISCORD_BOT_TOKEN": "EMPTY",
-  "MONGO_DB_URI": "mongodb://localhost:27017/"
-}

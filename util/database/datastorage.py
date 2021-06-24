@@ -69,3 +69,11 @@ class DataStorage:
         """
         prefixes = self.db['guild-prefixes']
         return prefixes.find_one({"_id": guild_id})
+
+    def add_user_to_leaderboard(self, user_id: int):
+        users = self.db['wanikani-users']
+        users.update_one({"_id": user_id}, {"$set": {"leaderboard": True}}, True)
+
+    def get_database(self):
+        users = self.db['wanikani-users']
+        return users
